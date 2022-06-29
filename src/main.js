@@ -1,4 +1,9 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
+import MaterialList from './components/MaterialList.vue';
 
-createApp(App).mount('#app')
+const app = createApp(App);
+
+app.component('material-list', MaterialList);
+
+app.mount('#app');

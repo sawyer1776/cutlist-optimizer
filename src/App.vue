@@ -1,9 +1,6 @@
 <template>
+	<the-header></the-header>
 	<section id="main-section">
-		<header>
-			<h1 class="heading">Build Your Cutlist</h1>
-		</header>
-
 		<ul class="materials container">
 			<material-list
 				v-for="object in cutlists"
@@ -11,46 +8,25 @@
 				v-bind:list-type="object.listType"
 				v-bind:name="object.name"
 				v-bind:cutlist="object.cutlist"
+				v-bind:total="object.totalNum"
 				@new-cutlist-item="newItem"
 			></material-list>
-
-			<li class="add-new-stock">
-				<h2>Add a new stock size</h2>
-				<input
-					type="text"
-					placeholder='Description (eg; "2x4")'
-					v-model="enteredValueName"
-				/>
-				<div class="new-stock-btns">
-					<button
-						class="btn sheet"
-						@click="addNewMaterial('Sheet')"
-					>
-						Sheet
-					</button>
-					<p>Or</p>
-					<button
-						class="btn linear"
-						@click="addNewMaterial('Linear')"
-					>
-						Linear
-					</button>
-				</div>
-			</li>
+			<add-stock @new-material="addNewMaterial"></add-stock>
 		</ul>
 	</section>
 </template>
 
 <script>
 import MaterialList from './components/MaterialList.vue';
+import TheHeader from './components/layout/TheHeader.vue';
+import AddStock from './components/layout/AddStock.vue';
 
 export default {
-	components: { MaterialList },
+	components: { MaterialList, TheHeader, AddStock },
 	data() {
 		return {
 			cutlists: {
-				// 1: {
-				// 	id: 1,
+				// '4x4 Beams': {
 				// 	name: '4x4 Beams',
 				// 	listType: 'Linear',
 				// 	cutlist: [
@@ -58,8 +34,9 @@ export default {
 				// 		[36, 2],
 				// 		[57, 3],
 				// 	],
+				// 	totalNum: 47,
 				// },
-				// 2: {
+				// '2x6': {
 				// 	name: '2x6',
 				// 	listType: 'Linear',
 				// 	cutlist: [
@@ -67,8 +44,9 @@ export default {
 				// 		[36, 2],
 				// 		[57, 3],
 				// 	],
+				// 	totalNum: 89,
 				// },
-				// 3: {
+				// '3/4 plywood': {
 				// 	name: '3/4 plywood',
 				// 	listType: 'Sheet',
 				// 	cutlist: [
@@ -76,6 +54,7 @@ export default {
 				// 		[12.25, 16, 2],
 				// 		[57, 3.25, 3],
 				// 	],
+				// 	totalNum: 16,
 				// },
 			},
 
@@ -84,24 +63,67 @@ export default {
 	},
 
 	methods: {
-		newItem(obj, length, qty) {
-			if (length && qty) {
-				obj.cutlist.push([length, qty]);
+		newItem(obj, length, qty, width) {
+			//if the item is sheet
+			if (obj.listType == 'Sheet') {
+				if (length && width && qty) {
+					obj.cutlist.push([length, width, qty]);
+				}
 			}
-		},
-		addBtnClick() {
-			this.newMaterialActive = false;
-		},
-		addNewMaterial(type) {
-			//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#computed_property_names
 
-			let value = this.enteredValueName;
-			this.cutlists[value] = {
-				name: this.enteredValueName,
+			//if the item is linear
+			if (obj.listType == 'Linear') {
+				if (length && qty) {
+					obj.cutlist.push([length, qty]);
+				}
+			}
+			this.calcTotal(obj);
+		},
+
+		addNewMaterial(type, enteredName) {
+			//fired on the addNewMaterial emit
+			//type should be 'Sheet' or 'Linear'
+			//entered name is a user input
+
+			this.cutlists[enteredName] = {
+				name: enteredName,
 				listType: type,
 				cutlist: [],
 			};
-			this.enteredValueName = null;
+
+			console.log(this.cutlists);
+		},
+		roundToThree(num) {
+			return Number.parseFloat(num).toFixed(3);
+		},
+
+		calcLinear(material) {
+			material.cutlist.forEach((item) => {
+				material.totalNum += item[0] * item[1];
+			});
+			material.totalNum = this.roundToThree(
+				material.totalNum / 12
+			);
+		},
+		calcArea(material) {
+			material.cutlist.forEach((item) => {
+				material.totalNum += item[0] * item[1] * item[2];
+			});
+			material.totalNum = this.roundToThree(
+				material.totalNum / 144
+			);
+		},
+		calcTotal(obj) {
+			const postition = obj.name;
+			const material = this.cutlists[postition];
+			material.totalNum = 0;
+
+			if (obj.listType == 'Linear') {
+				this.calcLinear(material);
+			}
+			if (obj.listType == 'Sheet') {
+				this.calcArea(material);
+			}
 		},
 	},
 };
@@ -121,12 +143,13 @@ export default {
 	--large: 4rem;
 
 	--color-main: #4f86c0;
-	--color-light: #89a6c5;
-	--color-sheet: #d92323;
-	--color-sheet-light: #c58989;
-	--color-linear: #258588;
-	--color-linear-light: #89c3c5;
+	--color-light: #b1c9e3;
+	--color-sheet: #ce2121;
+	--color-sheet-light: #f4dfdf;
+	--color-linear: #126e71;
+	--color-linear-light: #daf4f5;
 	--wht: rgb(255, 255, 255);
+	--color-dark: #222828;
 }
 
 html {
@@ -135,18 +158,6 @@ html {
 
 body {
 	margin: 0;
-}
-
-header {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-	margin: 3rem auto;
-	border-radius: 10px;
-	padding: 1rem;
-	background-color: var(--color-main);
-	color: white;
-	text-align: center;
-	width: 90%;
-	max-width: 65rem;
 }
 
 .heading {
@@ -193,6 +204,19 @@ header {
 	font-size: var(--small);
 	border-radius: 0.5rem;
 }
+.inputs {
+	display: flex;
+	font-size: inherit;
+	justify-content: space-between;
+	width: 100%;
+	padding-right: 1rem;
+}
+
+.inputs-length-width {
+	font-size: inherit;
+	display: flex;
+	gap: 1rem;
+}
 .sheet {
 	background-color: var(--color-sheet);
 	color: var(--wht);
@@ -212,8 +236,8 @@ header {
 }
 
 .new-item {
-	box-shadow: 0.5rem 0.5rem 1.5rem 0.25rem
-		rgba(0, 0, 0, 0.15);
+	box-shadow: 0rem 0.75rem 0.75rem 0.25rem
+		rgba(0, 0, 0, 0.055);
 	margin-bottom: 2rem;
 }
 
@@ -245,12 +269,22 @@ header {
 }
 
 .number-input {
+	width: 7rem;
+	height: 3rem;
+}
+
+.qty-input {
 	width: 5rem;
 	height: 3rem;
 }
 
 .cutlist {
 	width: 100%;
+}
+.sheet-numbers {
+	font-size: inherit;
+	display: flex;
+	gap: 0.75rem;
 }
 
 .cutlist-items {

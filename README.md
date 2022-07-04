@@ -1,4 +1,6 @@
-# cli-refactor
+Take a look at https://kaleidoscopic-sprinkles-c00c23.netlify.app/
+
+I built this to practice building with Vue
 
 ## Project setup
 ```

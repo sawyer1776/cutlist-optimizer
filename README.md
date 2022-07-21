@@ -1,6 +1,8 @@
-Take a look at https://kaleidoscopic-sprinkles-c00c23.netlify.app/
+Take a look at https://cutlist-optimizer.netlify.app
 
-I built this to practice building with Vue
+Built to make mine and every other carpenters life easier when calculating stock needs and keeping up with the cuts needed
+
+The ability to save your project is coming soon.
 
 ## Project setup
 ```
